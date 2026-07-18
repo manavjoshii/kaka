@@ -23,6 +23,8 @@ Built by [Manav Joshi](https://manavjoshi.com) for himself first. This is the sa
 
 You need a free [Cloudflare account](https://dash.cloudflare.com/sign-up) and a free [Gemini API key](https://aistudio.google.com/apikey). About 10 minutes.
 
+Using Claude Code or another coding agent? Open this folder and say "set up my Kaka". The repo carries a runbook (`CLAUDE.md`) that walks the agent through everything, and it will only stop to ask for the two account signups, one login click, and your secrets.
+
 ```bash
 git clone https://github.com/manavjoshii/kaka.git
 cd kaka
