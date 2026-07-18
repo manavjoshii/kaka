@@ -1,0 +1,17 @@
+{
+  "name": "Kaka",
+  "short_name": "Kaka",
+  "description": "Your smart personal assistant for todos and habits.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fbf9f5",
+  "theme_color": "#fbf9f5",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
