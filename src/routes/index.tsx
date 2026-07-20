@@ -1023,16 +1023,16 @@ function HomePage() {
             aria-hidden
             className="grid place-items-center text-accent"
           >
-            {/* The mark: four arcs (the pillars) closing into a day, around
-                the one thing at its center. Follows the chosen accent. */}
-            <svg viewBox="0 0 40 40" className="size-9" fill="none">
-              <g stroke="currentColor" strokeWidth="5" strokeLinecap="round">
-                <path d="M33.37 21.88 A13.5 13.5 0 0 1 21.88 33.37" />
-                <path d="M18.12 33.37 A13.5 13.5 0 0 1 6.63 21.88" />
-                <path d="M6.63 18.12 A13.5 13.5 0 0 1 18.12 6.63" />
-                <path d="M21.88 6.63 A13.5 13.5 0 0 1 33.37 18.12" />
+            {/* The mark: our own duckling — flat silhouette, follows the
+                chosen accent. */}
+            <svg viewBox="0 0 40 40" className="size-9">
+              <g fill="currentColor">
+                <circle cx="24" cy="13" r="8" />
+                <circle cx="17" cy="26" r="11" />
+                <path d="M31 10.5 L37.5 13 L31 16.5 Z" />
+                <path d="M9 19.5 L3.5 15 L11 14 Z" />
               </g>
-              <circle cx="20" cy="20" r="4" fill="currentColor" />
+              <circle cx="26.5" cy="11" r="1.7" fill="var(--background)" />
             </svg>
           </motion.span>
           <div>
@@ -1793,6 +1793,7 @@ function SettingsPopover({
     }
   }
   const [open, setOpen] = useState(false);
+  const [calHelp, setCalHelp] = useState(false);
   const [icsUrl, setIcsUrl] = useState("");
   const [loaded, setLoaded] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
@@ -1860,9 +1861,6 @@ function SettingsPopover({
               <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold">
                 <Bell className="size-3.5" /> Reminders
               </p>
-              <p className="mb-2 text-[11px] leading-snug text-muted-foreground">
-                Get a notification on this device when a task's reminder time hits.
-              </p>
               <button
                 onClick={enableReminders}
                 disabled={busy}
@@ -1872,13 +1870,23 @@ function SettingsPopover({
               </button>
             </div>
             <div>
-              <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold">
-                <Calendar className="size-3.5" /> Google Calendar
+              <p className="mb-1 flex items-center justify-between gap-1.5 text-xs font-semibold">
+                <span className="flex items-center gap-1.5"><Calendar className="size-3.5" /> Google Calendar</span>
+                <button
+                  onClick={() => setCalHelp((v) => !v)}
+                  className="text-[11px] font-medium text-accent hover:underline"
+                >
+                  {calHelp ? "Hide" : "Show me how"}
+                </button>
               </p>
-              <p className="mb-2 text-[11px] leading-snug text-muted-foreground">
-                Paste your calendar's <b>Secret address in iCal format</b> (Google Calendar →
-                Settings → your calendar → Integrate calendar). Events show in the Today strip.
-              </p>
+              {calHelp && (
+                <ol className="mb-2 list-decimal space-y-0.5 pl-4 text-[11px] leading-snug text-muted-foreground">
+                  <li>Open Google Calendar on a computer → gear → Settings.</li>
+                  <li>Click your calendar in the left list → "Integrate calendar".</li>
+                  <li>Copy the <b>Secret address in iCal format</b>.</li>
+                  <li>Paste it below and save. Events appear in the Today strip.</li>
+                </ol>
+              )}
               <input
                 value={icsUrl}
                 onChange={(e) => setIcsUrl(e.target.value)}
@@ -1918,18 +1926,13 @@ function SettingsPopover({
                   />
                 ))}
               </div>
-              <p className="mt-1.5 text-[11px] leading-snug text-muted-foreground">
-                One color, many shades: deep means urgent, bright means act, light means done.
-              </p>
             </div>
             <div className="mt-4 border-t border-border pt-3">
               <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold">
                 <BrainCircuit className="size-3.5" /> Second brain
               </p>
               <p className="mb-2 text-[11px] leading-snug text-muted-foreground">
-                Kaka can write your day into Obsidian, Notion, or any notes app —
-                and read your goals back so its answers know you. Your Kaka's
-                endpoints, keyed by your site password:
+                Pipe your day into Obsidian or Notion, automatically.
               </p>
               <div className="rounded-md border border-border bg-surface px-2 py-1.5 font-mono text-[10px] leading-relaxed text-muted-foreground">
                 GET /api/digest?key=…&date=YYYY-MM-DD<br />
@@ -1942,7 +1945,7 @@ function SettingsPopover({
                 rel="noopener noreferrer"
                 className="mt-1.5 inline-block text-[11px] font-medium text-accent hover:underline"
               >
-                Wiring guide →
+                Show me how →
               </a>
             </div>
             <div className="mt-4 border-t border-border pt-3">
@@ -1951,7 +1954,7 @@ function SettingsPopover({
                 onClick={() => setOpen(false)}
                 className="flex items-center justify-between gap-3 text-xs font-medium text-foreground hover:text-accent"
               >
-                <span>History — every capture, completion and check-in</span>
+                <span>History</span>
                 <ArrowRight className="size-3.5 shrink-0" />
               </Link>
             </div>

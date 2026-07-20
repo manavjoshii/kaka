@@ -96,3 +96,27 @@ they do.
   takes effect.
 - Updates later: `git pull`, `npm run build`, `npx wrangler deploy` — all
   silent, no human steps, their data in KV is untouched.
+
+## Optional: connect Obsidian (offer this AFTER the app works)
+
+Ask one question: "Do you use Obsidian or another notes app? Kaka can write
+a daily summary of your day into it automatically." If no, skip entirely.
+
+If yes (macOS + Obsidian):
+1. Ask them for their vault folder location (or find it: `ls ~/Documents`,
+   `ls ~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents` are the
+   usual spots — confirm with them before using it).
+2. Create `~/.kaka/` and an executable script `~/.kaka/daily-digest.sh` that:
+   reads the site password from `~/.kaka/key` (plain text, one line), curls
+   `https://<their-worker>/api/digest?key=$KEY&date=<yesterday>`, and writes
+   the returned markdown to `<vault>/kaka/<date>.md` (create the folder).
+   Use `printf`, not `echo`, when handling JSON in zsh.
+3. Schedule it daily at 07:30 with launchd (a plist in
+   `~/Library/LaunchAgents`, label `com.kaka.daily-digest`, then
+   `launchctl load`).
+4. **HUMAN STEP — the key.** You must not collect their password. Tell them
+   literally: "Open the file ~/.kaka/key I just created (it's empty), type
+   your Kaka password into it on one line, and save." Verify the script works
+   after they confirm (run it once; expect a new file in the vault).
+5. Windows users: same script logic as a .ps1 plus a Task Scheduler daily
+   task; ask them to fill the key file the same way.
