@@ -63,7 +63,6 @@ import {
   Repeat,
   History as HistoryIcon,
   Download,
-  Pencil,
   Move,
   Bell,
   BellOff,
@@ -283,7 +282,7 @@ function HomePage() {
   const [todos, setTodos] = useLocal<Todo[]>(STORAGE_KEYS.todos, []);
   const [habits, setHabits] = useLocal<Habit[]>(STORAGE_KEYS.habits, []);
   const [username, setUsername] = useLocal<string>("kaka.username.v1", DEFAULT_USERNAME);
-  const [editingName, setEditingName] = useState(false);
+  const [nameDraft, setNameDraft] = useState("");
   const [focus, setFocus] = useLocal<Focus>(STORAGE_KEYS.focus, { date: "", ids: [] });
   // History lives behind Settings — the main screen is for today, not the log.
   const [showHistory, setShowHistory] = useLocal<boolean>("kaka.history-visible.v1", false);
@@ -1047,7 +1046,6 @@ function HomePage() {
           </div>
         </div>
         <div className="flex items-center gap-4">
-          {doneToday > 0 && <Stat label="Done" value={String(doneToday)} />}
           <motion.button
             whileTap={{ scale: 0.85, rotate: -15 }}
             onClick={toggleDarkMode}
@@ -1059,6 +1057,8 @@ function HomePage() {
           <SettingsPopover
             showHistory={showHistory}
             onToggleHistory={setShowHistory}
+            username={username === DEFAULT_USERNAME ? "" : username}
+            onUsernameChange={(v) => setUsername(v.trim() ? v : DEFAULT_USERNAME)}
             onSettingsSaved={() => {
               const start = new Date();
               start.setHours(0, 0, 0, 0);
@@ -1096,30 +1096,6 @@ function HomePage() {
             </p>
           )}
         </motion.div>
-        <span className="ml-auto flex items-center gap-1 text-xs text-muted-foreground">
-          <span>signed in as</span>
-          {editingName ? (
-            <input
-              autoFocus
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              onBlur={() => setEditingName(false)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === "Escape") setEditingName(false);
-              }}
-              className="w-24 rounded-md border border-accent bg-card px-1.5 py-0.5 text-xs text-foreground outline-none"
-            />
-          ) : (
-            <button
-              onClick={() => setEditingName(true)}
-              className="group inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-medium text-foreground hover:bg-surface-2"
-              title="Click to edit"
-            >
-              {username || "Set name"}
-              <Pencil className="size-3 opacity-0 transition-opacity group-hover:opacity-60" />
-            </button>
-          )}
-        </span>
       </div>
 
       {/* The daily pillars — the rule: every day touches all of them.
@@ -1141,11 +1117,14 @@ function HomePage() {
               }`}
             >
               <span aria-hidden>{m.emoji}</span>
-              <span className="max-md:hidden">{m.label}</span>
+              <span>{m.label}</span>
               {done && <Check className="size-3" strokeWidth={3} />}
             </span>
           );
         })}
+        <span className="ml-1 text-[11px] text-muted-foreground tabular-nums">
+          {BUCKETS.filter((b) => bucketDone[b]).length}/{BUCKETS.length} fed today
+        </span>
       </div>
       )}
 
@@ -1466,14 +1445,47 @@ function HomePage() {
       {isFirstRun && (
         <section className="mb-10 max-md:mb-4">
           <div className="rounded-3xl border border-accent/25 bg-accent/5 p-6 text-center max-md:p-5">
-            <p className="font-display text-xl font-semibold tracking-tight">
-              Your whole day, in one sentence.
-            </p>
-            <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-              Type it or say it — Kaka schedules it, reminds you, and files it
-              under the right part of your life. Try one of the examples above,
-              or dump everything on your mind in one go.
-            </p>
+            {username === DEFAULT_USERNAME ? (
+              <>
+                <p className="font-display text-xl font-semibold tracking-tight">
+                  What should Kaka call you?
+                </p>
+                <form
+                  className="mx-auto mt-4 flex max-w-xs items-center gap-2"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const v = nameDraft.trim();
+                    if (v) setUsername(v);
+                  }}
+                >
+                  <input
+                    autoFocus
+                    value={nameDraft}
+                    onChange={(e) => setNameDraft(e.target.value)}
+                    placeholder="Your name"
+                    className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm outline-none focus:border-accent"
+                  />
+                  <button
+                    type="submit"
+                    disabled={!nameDraft.trim()}
+                    className="rounded-xl bg-accent px-4 py-2 text-sm font-medium text-accent-foreground disabled:opacity-40"
+                  >
+                    Start
+                  </button>
+                </form>
+              </>
+            ) : (
+              <>
+                <p className="font-display text-xl font-semibold tracking-tight">
+                  {username}, your whole day fits in one sentence.
+                </p>
+                <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+                  Type it or say it — Kaka schedules it, reminds you, and files
+                  it under the right part of your life. Try one of the examples
+                  above, or dump everything on your mind in one go.
+                </p>
+              </>
+            )}
           </div>
         </section>
       )}
@@ -1749,15 +1761,43 @@ function ShutdownCard({
 }
 
 // Settings: reminders for this device + the Google Calendar secret address.
+/** The five accent choices — one hue each; the app derives every colored
+ *  state (action, reward, urgency) from the chosen hue. See styles.css. */
+const ACCENT_CHOICES = [
+  { id: "", label: "Marigold", hue: 75 },
+  { id: "forest", label: "Forest", hue: 150 },
+  { id: "ocean", label: "Ocean", hue: 240 },
+  { id: "plum", label: "Plum", hue: 310 },
+  { id: "rose", label: "Rose", hue: 15 },
+] as const;
+
 function SettingsPopover({
   onSettingsSaved,
   showHistory,
   onToggleHistory,
+  username,
+  onUsernameChange,
 }: {
   onSettingsSaved: () => void;
   showHistory: boolean;
   onToggleHistory: (v: boolean) => void;
+  username: string;
+  onUsernameChange: (v: string) => void;
 }) {
+  const [accent, setAccent] = useState("");
+  useEffect(() => {
+    setAccent(document.documentElement.getAttribute("data-accent") ?? "");
+  }, []);
+  function pickAccent(id: string) {
+    setAccent(id);
+    if (id) {
+      document.documentElement.setAttribute("data-accent", id);
+      localStorage.setItem("kaka.accent.v1", id);
+    } else {
+      document.documentElement.removeAttribute("data-accent");
+      localStorage.removeItem("kaka.accent.v1");
+    }
+  }
   const [open, setOpen] = useState(false);
   const [icsUrl, setIcsUrl] = useState("");
   const [floor, setFloor] = useState("");
@@ -1898,6 +1938,35 @@ function SettingsPopover({
               >
                 Save
               </button>
+            </div>
+            <div className="mt-4 border-t border-border pt-3">
+              <p className="mb-1.5 text-xs font-medium text-foreground">Your name</p>
+              <input
+                value={username}
+                onChange={(e) => onUsernameChange(e.target.value)}
+                placeholder="Your name"
+                className="w-full rounded-md border border-border bg-surface px-2 py-1.5 text-xs outline-none focus:border-accent"
+              />
+            </div>
+            <div className="mt-4 border-t border-border pt-3">
+              <p className="mb-2 text-xs font-medium text-foreground">Accent</p>
+              <div className="flex items-center gap-2">
+                {ACCENT_CHOICES.map((c) => (
+                  <button
+                    key={c.id}
+                    onClick={() => pickAccent(c.id)}
+                    aria-label={c.label}
+                    title={c.label}
+                    className={`size-6 rounded-full transition-transform hover:scale-110 ${
+                      accent === c.id ? "ring-2 ring-foreground ring-offset-2 ring-offset-card" : ""
+                    }`}
+                    style={{ backgroundColor: `oklch(0.62 0.15 ${c.hue})` }}
+                  />
+                ))}
+              </div>
+              <p className="mt-1.5 text-[11px] leading-snug text-muted-foreground">
+                One color, many shades: deep means urgent, bright means act, light means done.
+              </p>
             </div>
             <div className="mt-4 border-t border-border pt-3">
               <label className="flex cursor-pointer items-center justify-between gap-3">

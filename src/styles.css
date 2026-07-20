@@ -74,6 +74,21 @@
   --color-surface-2: var(--surface-2);
 }
 
+/* ═══ One-hue accent system ═══
+ * The user picks ONE accent (Settings); every colored state derives from
+ * its hue at different lightness/chroma. The psychology: intensity encodes
+ * urgency — the deepest shade demands attention (Do now, overdue), the mid
+ * shade invites action (send, buttons), the lightest tint rewards (done
+ * states, lit pillars, streaks). One hue keeps the screen calm; brightness
+ * builds the hierarchy. Destructive delete stays red — danger is a
+ * convention, not a theme.
+ */
+:root { --accent-hue: 75; }               /* Marigold (default) */
+[data-accent="forest"] { --accent-hue: 150; }
+[data-accent="ocean"] { --accent-hue: 240; }
+[data-accent="plum"] { --accent-hue: 310; }
+[data-accent="rose"] { --accent-hue: 15; }
+
 :root {
   --radius: 1rem;
   /* Notion-inspired clean cream with colorful accents */
@@ -91,21 +106,26 @@
   --secondary-foreground: oklch(0.27 0.02 60);
   --muted: oklch(0.95 0.008 85);
   --muted-foreground: oklch(0.5 0.02 60);
-  --accent: oklch(0.62 0.18 260);
+  /* action: the mid shade — inviting, not shouting */
+  --accent: oklch(0.62 0.15 var(--accent-hue));
   --accent-foreground: oklch(0.985 0.005 85);
   --destructive: oklch(0.58 0.22 25);
   --destructive-foreground: oklch(0.985 0.005 85);
   --border: oklch(0.88 0.01 60);
   --input: oklch(0.88 0.01 60);
-  --ring: oklch(0.62 0.18 260);
-  --neon: oklch(0.7 0.18 145);
+  --ring: oklch(0.62 0.15 var(--accent-hue));
+  /* reward: light-bright — done states, lit pillars */
+  --neon: oklch(0.7 0.14 var(--accent-hue));
   --neon-foreground: oklch(0.22 0.02 60);
-  --lime: oklch(0.78 0.17 130);
-  --magenta: oklch(0.65 0.22 0);
-  --amber: oklch(0.78 0.16 75);
-  --sky: oklch(0.7 0.13 230);
-  --rose: oklch(0.68 0.18 15);
-  --violet: oklch(0.62 0.18 290);
+  --lime: oklch(0.78 0.13 var(--accent-hue));
+  --magenta: oklch(0.55 0.18 var(--accent-hue));
+  /* warmth: streaks, gentle emphasis */
+  --amber: oklch(0.68 0.14 var(--accent-hue));
+  /* mid emphasis: Schedule, timed chips */
+  --sky: oklch(0.58 0.11 var(--accent-hue));
+  /* urgency: the deepest, densest shade — Do now, overdue */
+  --rose: oklch(0.48 0.17 var(--accent-hue));
+  --violet: oklch(0.62 0.15 var(--accent-hue));
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -136,13 +156,13 @@
   --secondary-foreground: oklch(0.984 0.003 247.858);
   --muted: oklch(0.279 0.041 260.031);
   --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
+  --accent: oklch(0.68 0.13 var(--accent-hue));
+  --accent-foreground: oklch(0.15 0.02 60);
   --destructive: oklch(0.704 0.191 22.216);
   --destructive-foreground: oklch(0.984 0.003 247.858);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
+  --ring: oklch(0.68 0.13 var(--accent-hue));
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
@@ -156,14 +176,14 @@
   --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.551 0.027 264.364);
-  --neon: oklch(0.75 0.19 145);
+  --neon: oklch(0.75 0.15 var(--accent-hue));
   --neon-foreground: oklch(0.129 0.042 264.695);
-  --lime: oklch(0.8 0.18 130);
-  --magenta: oklch(0.68 0.23 0);
-  --amber: oklch(0.75 0.17 75);
-  --sky: oklch(0.72 0.14 230);
-  --rose: oklch(0.7 0.19 15);
-  --violet: oklch(0.68 0.19 290);
+  --lime: oklch(0.8 0.14 var(--accent-hue));
+  --magenta: oklch(0.66 0.18 var(--accent-hue));
+  --amber: oklch(0.75 0.15 var(--accent-hue));
+  --sky: oklch(0.68 0.12 var(--accent-hue));
+  --rose: oklch(0.62 0.18 var(--accent-hue));
+  --violet: oklch(0.68 0.15 var(--accent-hue));
 }
 
 @layer base {

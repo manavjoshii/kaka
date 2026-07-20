@@ -107,7 +107,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 // `dark` class straight on <html> from localStorage (or system preference on
 // first visit), entirely outside React's render so it can't cause a
 // hydration mismatch.
-const THEME_INIT_SCRIPT = `(function(){try{var s=localStorage.getItem('kaka.theme.v1');var d=s==='dark'||(!s&&window.matchMedia('(prefers-color-scheme: dark)').matches);if(d)document.documentElement.classList.add('dark');}catch(e){}})();`;
+const THEME_INIT_SCRIPT = `(function(){try{var s=localStorage.getItem('kaka.theme.v1');var d=s==='dark'||(!s&&window.matchMedia('(prefers-color-scheme: dark)').matches);if(d)document.documentElement.classList.add('dark');var a=localStorage.getItem('kaka.accent.v1');if(a)document.documentElement.setAttribute('data-accent',a);}catch(e){}})();`;
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
