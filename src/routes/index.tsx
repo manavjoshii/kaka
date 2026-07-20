@@ -1928,27 +1928,19 @@ function SettingsPopover({
               </div>
             </div>
             <div className="mt-4 border-t border-border pt-3">
-              <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold">
-                <BrainCircuit className="size-3.5" /> Second brain
-              </p>
-              <p className="mb-2 text-[11px] leading-snug text-muted-foreground">
-                Pipe your day into Obsidian or Notion, automatically.
-              </p>
-              <div className="rounded-md border border-border bg-surface px-2 py-1.5 font-mono text-[10px] leading-relaxed text-muted-foreground">
-                GET /api/digest?key=…&date=YYYY-MM-DD<br />
-                POST /api/context?key=…<br />
-                GET /api/review?key=…
-              </div>
               <a
                 href="https://github.com/manavjoshii/kaka#automation-bridge"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-1.5 inline-block text-[11px] font-medium text-accent hover:underline"
+                className="flex items-center justify-between gap-3 text-xs font-medium text-foreground hover:text-accent"
               >
-                Show me how →
+                <span className="flex items-center gap-1.5">
+                  <BrainCircuit className="size-3.5" /> Connects to your second brain
+                </span>
+                <ArrowRight className="size-3.5 shrink-0" />
               </a>
             </div>
-            <div className="mt-4 border-t border-border pt-3">
+            <div className="mt-2 border-t border-border pt-3">
               <Link
                 to="/history"
                 onClick={() => setOpen(false)}

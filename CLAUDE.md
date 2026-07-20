@@ -114,9 +114,18 @@ If yes (macOS + Obsidian):
 3. Schedule it daily at 07:30 with launchd (a plist in
    `~/Library/LaunchAgents`, label `com.kaka.daily-digest`, then
    `launchctl load`).
-4. **HUMAN STEP — the key.** You must not collect their password. Tell them
-   literally: "Open the file ~/.kaka/key I just created (it's empty), type
-   your Kaka password into it on one line, and save." Verify the script works
-   after they confirm (run it once; expect a new file in the vault).
+4. **HUMAN STEP — the key.** You must not collect, see, or type their
+   password — same rule as SITE_PASSWORD/GEMINI_API_KEY earlier. Use the
+   identical mechanic: run this yourself so the masked prompt appears in
+   their terminal, then tell them literally: "Your terminal now shows
+   'Kaka password: ' with the cursor waiting — type your Kaka password
+   there and press Enter. Nothing will appear on screen as you type, that's
+   normal."
+   ```
+   read -s -p "Kaka password: " kp && printf '%s' "$kp" > ~/.kaka/key && chmod 600 ~/.kaka/key && unset kp && echo && echo saved
+   ```
+   Verify the script works after they confirm (run it once; expect a new
+   file in the vault).
 5. Windows users: same script logic as a .ps1 plus a Task Scheduler daily
-   task; ask them to fill the key file the same way.
+   task; same masked-prompt mechanic (PowerShell's `Read-Host -AsSecureString`)
+   for the key.
