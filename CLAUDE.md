@@ -42,9 +42,9 @@ they do.
 
 1. `npm install`
 
-2. Personalize `src/config.ts` for them. Ask ONE simple question: "What's
-   your name, and do you want to keep the default 5 focus areas (Moonshot,
-   Money, Content, Movement, Social) or change them?" If they say keep
+2. Personalize `src/config.ts` for them. Ask ONE simple question: "What is
+   your name, and do you want to keep the default focus areas (Deep Work,
+   Health, People, Learning) or change them?" If they say keep
    defaults (expect most people to), just set their name and move on —
    don't make them answer more questions than that one.
 

@@ -62,20 +62,28 @@ function loginPageHtml(error?: string): string {
 <title>Kaka</title>
 <style>
   body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
-    background:#fbf9f5; font-family:system-ui,sans-serif; color:#3a342c; }
-  form { background:#fff; border:1px solid #e6e0d4; border-radius:16px; padding:2rem 2.25rem;
-    width:280px; box-shadow:0 10px 30px rgba(0,0,0,0.06); }
-  h1 { font-size:1.3rem; margin:0 0 1.1rem; }
-  input { width:100%; box-sizing:border-box; padding:0.6rem 0.75rem; border-radius:10px;
-    border:1px solid #d8d2c4; font-size:0.95rem; margin-bottom:0.75rem; }
-  button { width:100%; padding:0.6rem; border:none; border-radius:10px; background:#3a342c;
-    color:#fbf9f5; font-size:0.95rem; cursor:pointer; }
-  .err { color:#b3432b; font-size:0.82rem; margin:-0.3rem 0 0.75rem; }
+    background:#fbf9f5; font-family:system-ui,sans-serif; color:#3a342c;
+    -webkit-font-smoothing:antialiased; }
+  form { background:#fff; border:1px solid #e9e3d5; border-radius:20px; padding:2.4rem 2.4rem 2.1rem;
+    width:300px; box-shadow:0 24px 60px rgba(58,52,44,0.10), 0 2px 8px rgba(58,52,44,0.05);
+    text-align:center; }
+  h1 { font-size:1.6rem; letter-spacing:-0.02em; margin:0; font-weight:700; }
+  h1 i { font-style:normal; color:#e8a020; }
+  .tag { color:#97907f; font-size:0.8rem; margin:0.3rem 0 1.5rem; }
+  input { width:100%; box-sizing:border-box; padding:0.7rem 0.85rem; border-radius:12px;
+    border:1px solid #ddd6c6; font-size:0.95rem; margin-bottom:0.75rem; outline:none;
+    text-align:center; transition:border-color .15s, box-shadow .15s; background:#fdfcf9; }
+  input:focus { border-color:#e8a020; box-shadow:0 0 0 3px rgba(232,160,32,0.15); }
+  button { width:100%; padding:0.7rem; border:none; border-radius:12px; background:#3a342c;
+    color:#fbf9f5; font-size:0.95rem; font-weight:600; cursor:pointer; transition:opacity .15s; }
+  button:hover { opacity:0.9; }
+  .err { color:#b3432b; font-size:0.82rem; margin:-0.2rem 0 0.75rem; }
 </style>
 </head>
 <body>
   <form method="POST" action="${AUTH_PATH}">
-    <h1>Kaka</h1>
+    <h1>Kaka<i>.</i></h1>
+    <p class="tag">your day, in one sentence</p>
     ${error ? `<p class="err">${error}</p>` : ""}
     <input type="password" name="password" placeholder="Password" autofocus />
     <button type="submit">Enter</button>

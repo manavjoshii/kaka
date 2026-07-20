@@ -80,11 +80,11 @@ import {
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Kaka — Your smart personal assistant" },
+      { title: "Kaka — smart to-dos & habits" },
       {
         name: "description",
         content:
-          "Kaka is a smart personal assistant for todos and habits. Type or speak — it schedules, prioritizes and nudges you.",
+          "Smart to-dos and habits. Type or speak — Kaka schedules, reminds, and files your day.",
       },
     ],
   }),
@@ -986,6 +986,10 @@ function HomePage() {
   }
   const missedBuckets = BUCKETS.filter((b) => !bucketDone[b]);
 
+  // First run: nothing captured yet. The screen shows one invitation (the
+  // composer) instead of a wall of empty sections and unearned stats.
+  const isFirstRun = todos.length === 0 && habits.length === 0;
+
   // The headline: today's #1 — the first unfinished morning pick, else the
   // most pressing "Do now" task. Falls back to a quote only when there's
   // genuinely nothing to point at.
@@ -1056,8 +1060,9 @@ function HomePage() {
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <Stat label="Done" value={String(doneToday)} />
-          <Stat label="Level" value={String(lvl.level).padStart(2, "0")} />
+          {(stats.xp > 0 || doneToday > 0) && <Stat label="Done" value={String(doneToday)} />}
+          {stats.xp > 0 && <Stat label="Level" value={String(lvl.level).padStart(2, "0")} />}
+          {stats.xp > 0 && (
           <div className="flex items-center gap-2">
             <div className="font-mono text-xs text-muted-foreground tabular-nums">{stats.xp} XP</div>
             <div className="relative h-2 w-24 overflow-hidden rounded-full bg-surface-2">
@@ -1069,6 +1074,7 @@ function HomePage() {
               />
             </div>
           </div>
+          )}
           <motion.button
             whileTap={{ scale: 0.85, rotate: -15 }}
             onClick={toggleDarkMode}
@@ -1141,7 +1147,10 @@ function HomePage() {
         </span>
       </div>
 
-      {/* The daily pillars — the rule: every day touches all of them */}
+      {/* The daily pillars — the rule: every day touches all of them.
+          Hidden on first run: five gray "not yet" chips before the first
+          capture read as reproach, not guidance. */}
+      {!isFirstRun && (
       <div className="mb-6 flex flex-wrap items-center gap-2 max-md:mb-3">
         {BUCKETS.map((b) => {
           const done = bucketDone[b];
@@ -1163,6 +1172,7 @@ function HomePage() {
           );
         })}
       </div>
+      )}
 
       {/* Weekly review — one card, Mondays, until dismissed */}
       <AnimatePresence>
@@ -1476,7 +1486,25 @@ function HomePage() {
         </section>
       )}
 
+      {/* First run: one welcome card carries the whole pitch — everything
+          else (habits, matrix, history) appears once something exists. */}
+      {isFirstRun && (
+        <section className="mb-10 max-md:mb-4">
+          <div className="rounded-3xl border border-accent/25 bg-accent/5 p-6 text-center max-md:p-5">
+            <p className="font-display text-xl font-semibold tracking-tight">
+              Your whole day, in one sentence.
+            </p>
+            <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+              Type it or say it — Kaka schedules it, reminds you, and files it
+              under the right part of your life. Try one of the examples above,
+              or dump everything on your mind in one go.
+            </p>
+          </div>
+        </section>
+      )}
+
       {/* Habits — compact horizontal streak strip on mobile, full cards on desktop */}
+      {!isFirstRun && (
       <section className="mb-12 max-md:mb-3">
         <div className="mb-4 flex items-baseline justify-between max-md:mb-1.5">
           <h2 className="font-display text-3xl font-semibold tracking-tight max-md:text-base">
@@ -1522,8 +1550,10 @@ function HomePage() {
           </>
         )}
       </section>
+      )}
 
       {/* Eisenhower matrix */}
+      {!isFirstRun && (
       <section className="mb-10 max-md:mb-3">
         <div className="mb-4 flex items-baseline justify-between max-md:mb-1.5">
           <h2 className="font-display text-3xl font-semibold tracking-tight max-md:text-base">
@@ -1563,8 +1593,9 @@ function HomePage() {
           </div>
         )}
       </section>
+      )}
 
-      <HistorySection history={history} username={username} />
+      {!isFirstRun && <HistorySection history={history} username={username} />}
 
       <footer className="border-t border-border pt-6 text-xs text-muted-foreground">
         <AnimatePresence mode="wait">

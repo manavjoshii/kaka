@@ -1,7 +1,7 @@
 {
   "name": "Kaka",
   "short_name": "Kaka",
-  "description": "Your smart personal assistant for todos and habits.",
+  "description": "Smart to-dos and habits that feed your second brain.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#fbf9f5",

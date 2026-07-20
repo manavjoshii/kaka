@@ -72,9 +72,9 @@ To update later: pull, `npm run build`, `npx wrangler deploy`.
 
 ## Daily pillars
 
-The pillar system is the opinionated part. The default five are Moonshot, Money, Content, Movement, Social. The rule: every day should touch all of them, and the suggested morning picks always include at least one Moonshot task.
+The pillar system is the opinionated part. The defaults are Deep Work, Health, People, Learning. The rule: every day should touch all of them, and the suggested morning picks always include at least one Deep Work task. Picks are ranked by rules you can read: real deadlines first, important over busy, and nothing rots unseen.
 
-All of it lives in `src/config.ts`. Rename the pillars, change how many there are, rewrite the descriptions so the AI knows what belongs where, or switch off the keystone rule. The chips, the AI classification, and the weekly review all follow the config.
+All of it lives in `src/config.ts`. Rename the pillars, change how many there are, rewrite the descriptions so the AI knows what belongs where, or switch off the keystone rule. Ready-made presets (Builder, Student) sit in the comments. The chips, the AI classification, and the weekly review all follow the config.
 
 ## Automation bridge
 

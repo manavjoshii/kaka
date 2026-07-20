@@ -20,45 +20,54 @@ export const DEFAULT_USERNAME = "Friend";
  */
 export const PILLARS = [
   {
-    id: "moonshot",
-    label: "Moonshot",
-    emoji: "🚀",
+    id: "deepwork",
+    label: "Deep Work",
+    emoji: "🎯",
     description:
-      "long-term ambitious building — your startup, product, craft, studies, deep work on the big thing",
+      "the big thing you're building or becoming — career-defining effort, your craft, your studies, focused work that compounds",
   },
   {
-    id: "money",
-    label: "Money",
-    emoji: "💰",
-    description: "revenue — clients, consulting, invoices, sponsorships, sales, deals",
+    id: "health",
+    label: "Health",
+    emoji: "💪",
+    description: "the body — gym, walks, sport, food choices, sleep, any exercise",
   },
   {
-    id: "content",
-    label: "Content",
-    emoji: "🎬",
-    description:
-      "creating or publishing — reels, scripts, posts, videos, editing, writing",
+    id: "people",
+    label: "People",
+    emoji: "❤️",
+    description: "relationships — family, friends, calls, meetups, community, networking",
   },
   {
-    id: "movement",
-    label: "Movement",
-    emoji: "🏃",
-    description: "physical — gym, walks, sport, stretching, any exercise",
-  },
-  {
-    id: "social",
-    label: "Social",
-    emoji: "🤝",
-    description: "people — calls, meetups, family, friends, networking",
+    id: "learning",
+    label: "Learning",
+    emoji: "📚",
+    description: "growth — reading, courses, skills, practice, curiosity",
   },
 ] as const;
+
+/* Other presets — replace PILLARS above with one of these, or write your own.
+ *
+ * Builder:
+ *   moonshot 🚀 "long-term ambitious building — startup, product, deep work on the big thing"
+ *   money    💰 "revenue — clients, invoices, sponsorships, sales, deals"
+ *   content  🎬 "creating or publishing — reels, scripts, posts, editing, writing"
+ *   movement 🏃 "physical — gym, walks, sport, any exercise"
+ *   social   🤝 "people — calls, meetups, family, friends, networking"
+ *
+ * Student:
+ *   study    📖 "coursework, assignments, exam prep, thesis"
+ *   health   💪 "the body — gym, sport, sleep, food"
+ *   people   ❤️ "family, friends, campus life"
+ *   craft    🛠 "side projects, portfolio, skills beyond the syllabus"
+ */
 
 /**
  * The pillar guaranteed a slot in the suggested morning picks — "every day
  * contains at least one X task". Set to an id from PILLARS, or null to
  * disable the rule.
  */
-export const KEYSTONE_PILLAR: string | null = "moonshot";
+export const KEYSTONE_PILLAR: string | null = "deepwork";
 
 /**
  * Web-push VAPID keys — required for reminders/notifications.
