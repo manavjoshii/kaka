@@ -9,7 +9,8 @@ const SNAPSHOT_TTL_SECONDS = 30 * 24 * 60 * 60;
 const StateSchema = z.object({
   todos: z.array(z.any()),
   habits: z.array(z.any()),
-  stats: z.object({ xp: z.number(), level: z.number() }),
+  // Legacy blobs may still carry stats (the old XP/level system); tolerated, ignored.
+  stats: z.object({ xp: z.number(), level: z.number() }).optional(),
   /** Activity log, merged by event id across devices. */
   history: z.array(z.any()).optional(),
   /** Today's focus picks from the morning ritual. */

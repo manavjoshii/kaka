@@ -12,18 +12,14 @@ import {
   getLastModified,
   habitScheduledOn,
   lastNDays,
-  levelFromXp,
   setLastModified,
   todayISO,
   uid,
   useLocal,
-  XP_HABIT,
-  XP_TODO,
   type Bucket,
   type Focus,
   type Habit,
   type Recurrence,
-  type Stats,
   type Todo,
 } from "@/lib/store";
 import { DEFAULT_USERNAME, KEYSTONE_PILLAR } from "@/config";
@@ -286,13 +282,11 @@ function advanceRecurring(t: Todo): Todo {
 function HomePage() {
   const [todos, setTodos] = useLocal<Todo[]>(STORAGE_KEYS.todos, []);
   const [habits, setHabits] = useLocal<Habit[]>(STORAGE_KEYS.habits, []);
-  const [stats, setStats] = useLocal<Stats>(STORAGE_KEYS.stats, {
-    xp: 0,
-    level: 1,
-  });
   const [username, setUsername] = useLocal<string>("kaka.username.v1", DEFAULT_USERNAME);
   const [editingName, setEditingName] = useState(false);
   const [focus, setFocus] = useLocal<Focus>(STORAGE_KEYS.focus, { date: "", ids: [] });
+  // History lives behind Settings — the main screen is for today, not the log.
+  const [showHistory, setShowHistory] = useLocal<boolean>("kaka.history-visible.v1", false);
   const history = useHistory();
 
   // Push reminders are delivered through this worker; registering is cheap
@@ -333,7 +327,6 @@ function HomePage() {
         if (remote && remote.updatedAt > getLastModified()) {
           setTodos(remote.todos as Todo[]);
           setHabits(remote.habits as Habit[]);
-          setStats(remote.stats);
           if (remote.focus) setFocus(remote.focus as Focus);
           setLastModified(remote.updatedAt);
         }
@@ -355,7 +348,6 @@ function HomePage() {
         data: {
           todos,
           habits,
-          stats,
           focus,
           history: readHistory(),
           tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
@@ -365,7 +357,7 @@ function HomePage() {
     }, 800);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [todos, habits, stats, focus, history, synced]);
+  }, [todos, habits, focus, history, synced]);
   // Picked once per session, frozen until the next reload/reopen. Starts at
   // 0 (deterministic) so server-render and the first client render match —
   // Date.now() would differ between SSR and hydration and trigger a
@@ -462,7 +454,6 @@ function HomePage() {
       .catch((e) => console.error("Bucket sweep failed:", e));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [synced, todos, habits]);
-  const lvl = levelFromXp(stats.xp);
   const parse = useServerFn(smartParse);
 
   const [input, setInput] = useState("");
@@ -695,14 +686,14 @@ function HomePage() {
       );
       if (todo) {
         toggleTodo(todo.id);
-        setAssistant(`Marked "${todo.title}" done. +${XP_TODO} XP`);
+        setAssistant(`Marked "${todo.title}" done.`);
       } else {
         const habit = habits.find((h) =>
           h.title.toLowerCase().includes(res.match.toLowerCase()),
         );
         if (habit && !habit.log.includes(today)) {
           toggleHabit(habit.id);
-          setAssistant(`Checked in on ${habit.emoji} ${habit.title}. +${XP_HABIT} XP`);
+          setAssistant(`Checked in on ${habit.emoji} ${habit.title}.`);
         } else {
           setAssistant(`Couldn't find "${res.match}" to complete.`);
         }
@@ -757,7 +748,6 @@ function HomePage() {
         const done = !t.done;
         if (done) {
           celebrate();
-          setStats((s) => ({ ...s, xp: s.xp + XP_TODO }));
           appendHistory({
             kind: "todo_completed",
             title: t.title,
@@ -773,7 +763,6 @@ function HomePage() {
             return { ...rolled, done: false, completedAt: undefined };
           }
         } else {
-          setStats((s) => ({ ...s, xp: Math.max(0, s.xp - XP_TODO) }));
           appendHistory({ kind: "todo_uncompleted", title: t.title });
         }
         return { ...t, done, completedAt: done ? Date.now() : undefined };
@@ -860,12 +849,10 @@ function HomePage() {
         if (h.id !== id) return h;
         const has = h.log.includes(today);
         if (has) {
-          setStats((s) => ({ ...s, xp: Math.max(0, s.xp - XP_HABIT) }));
           appendHistory({ kind: "habit_uncheck", title: h.title, meta: { emoji: h.emoji, date: today } });
           return { ...h, log: h.log.filter((d) => d !== today) };
         }
         celebrate({ intensity: "big" });
-        setStats((s) => ({ ...s, xp: s.xp + XP_HABIT }));
         appendHistory({
           kind: "habit_checkin",
           title: h.title,
@@ -1060,21 +1047,7 @@ function HomePage() {
           </div>
         </div>
         <div className="flex items-center gap-4">
-          {(stats.xp > 0 || doneToday > 0) && <Stat label="Done" value={String(doneToday)} />}
-          {stats.xp > 0 && <Stat label="Level" value={String(lvl.level).padStart(2, "0")} />}
-          {stats.xp > 0 && (
-          <div className="flex items-center gap-2">
-            <div className="font-mono text-xs text-muted-foreground tabular-nums">{stats.xp} XP</div>
-            <div className="relative h-2 w-24 overflow-hidden rounded-full bg-surface-2">
-              <motion.div
-                className="h-full bg-accent"
-                initial={{ width: 0 }}
-                animate={{ width: `${lvl.pct}%` }}
-                transition={{ type: "spring", stiffness: 120, damping: 20 }}
-              />
-            </div>
-          </div>
-          )}
+          {doneToday > 0 && <Stat label="Done" value={String(doneToday)} />}
           <motion.button
             whileTap={{ scale: 0.85, rotate: -15 }}
             onClick={toggleDarkMode}
@@ -1084,6 +1057,8 @@ function HomePage() {
             {darkMode ? <Sun className="size-4" /> : <Moon className="size-4" />}
           </motion.button>
           <SettingsPopover
+            showHistory={showHistory}
+            onToggleHistory={setShowHistory}
             onSettingsSaved={() => {
               const start = new Date();
               start.setHours(0, 0, 0, 0);
@@ -1595,7 +1570,7 @@ function HomePage() {
       </section>
       )}
 
-      {!isFirstRun && <HistorySection history={history} username={username} />}
+      {!isFirstRun && showHistory && <HistorySection history={history} username={username} />}
 
       <footer className="border-t border-border pt-6 text-xs text-muted-foreground">
         <AnimatePresence mode="wait">
@@ -1774,7 +1749,15 @@ function ShutdownCard({
 }
 
 // Settings: reminders for this device + the Google Calendar secret address.
-function SettingsPopover({ onSettingsSaved }: { onSettingsSaved: () => void }) {
+function SettingsPopover({
+  onSettingsSaved,
+  showHistory,
+  onToggleHistory,
+}: {
+  onSettingsSaved: () => void;
+  showHistory: boolean;
+  onToggleHistory: (v: boolean) => void;
+}) {
   const [open, setOpen] = useState(false);
   const [icsUrl, setIcsUrl] = useState("");
   const [floor, setFloor] = useState("");
@@ -1915,6 +1898,20 @@ function SettingsPopover({ onSettingsSaved }: { onSettingsSaved: () => void }) {
               >
                 Save
               </button>
+            </div>
+            <div className="mt-4 border-t border-border pt-3">
+              <label className="flex cursor-pointer items-center justify-between gap-3">
+                <span className="text-xs font-medium text-foreground">Show history on main screen</span>
+                <input
+                  type="checkbox"
+                  checked={showHistory}
+                  onChange={(e) => onToggleHistory(e.target.checked)}
+                  className="size-4 accent-accent"
+                />
+              </label>
+              <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
+                Every capture, completion and check-in, with Markdown/JSON export.
+              </p>
             </div>
             {status && <p className="mt-3 text-[11px] leading-snug text-accent">{status}</p>}
           </div>

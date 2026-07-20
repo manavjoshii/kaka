@@ -60,15 +60,9 @@ export type Focus = {
   ids: string[];
 };
 
-export type Stats = {
-  xp: number;
-  level: number;
-};
-
 const KEYS = {
   todos: "cred.todos.v1",
   habits: "cred.habits.v1",
-  stats: "cred.stats.v1",
   focus: "kaka.focus.v1",
 } as const;
 
@@ -172,14 +166,4 @@ export function daysLabel(days?: number[]): string {
 
 export function uid(): string {
   return Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
-}
-
-export const XP_TODO = 10;
-export const XP_HABIT = 15;
-export const XP_PER_LEVEL = 100;
-
-export function levelFromXp(xp: number) {
-  const level = Math.floor(xp / XP_PER_LEVEL) + 1;
-  const into = xp % XP_PER_LEVEL;
-  return { level, into, pct: (into / XP_PER_LEVEL) * 100 };
 }
