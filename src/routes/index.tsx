@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { AnimatePresence, motion, useDragControls } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
@@ -27,7 +27,6 @@ import { celebrate } from "@/lib/celebrate";
 import { smartParse, classifyBuckets, type SmartResult, type BatchItem } from "@/lib/parse.functions";
 import { pullState, pushState } from "@/lib/sync.functions";
 import { getSettings, saveSettings, getTodayEvents, type CalendarEvent } from "@/lib/calendar.functions";
-import { getFloor, saveFloor } from "@/lib/context.functions";
 import { getWeeklyReview, type WeeklyReview } from "@/lib/review.functions";
 import { savePushSub, sendTestPush } from "@/lib/push.functions";
 import { registerServiceWorker, subscribeToPush } from "@/lib/push-browser";
@@ -36,13 +35,7 @@ import {
   useHistory,
   readHistory,
   mergeHistory,
-  downloadHistory,
-  downloadHistoryJSON,
-  clearHistory,
-  kindLabel,
-  KIND_CATEGORIES,
   type HistoryEvent,
-  type HistoryKind,
 } from "@/lib/history";
 import { renderHeaderQuote, pickFooterQuote, smartSuggestions } from "@/lib/quotes";
 import {
@@ -61,8 +54,8 @@ import {
   Trash2,
   Hourglass,
   Repeat,
-  History as HistoryIcon,
-  Download,
+  ArrowRight,
+  BrainCircuit,
   Move,
   Bell,
   BellOff,
@@ -284,8 +277,6 @@ function HomePage() {
   const [username, setUsername] = useLocal<string>("kaka.username.v1", DEFAULT_USERNAME);
   const [nameDraft, setNameDraft] = useState("");
   const [focus, setFocus] = useLocal<Focus>(STORAGE_KEYS.focus, { date: "", ids: [] });
-  // History lives behind Settings — the main screen is for today, not the log.
-  const [showHistory, setShowHistory] = useLocal<boolean>("kaka.history-visible.v1", false);
   const history = useHistory();
 
   // Push reminders are delivered through this worker; registering is cheap
@@ -1026,13 +1017,23 @@ function HomePage() {
       <header className="mb-8 flex items-center justify-between max-md:mb-3">
         <div className="flex items-center gap-3">
           <motion.span
-            initial={{ rotate: -8, scale: 0.8 }}
+            initial={{ rotate: -90, scale: 0.8 }}
             animate={{ rotate: 0, scale: 1 }}
-            transition={{ type: "spring", stiffness: 260, damping: 14 }}
+            transition={{ type: "spring", stiffness: 200, damping: 16 }}
             aria-hidden
-            className="text-4xl leading-none"
+            className="grid place-items-center text-accent"
           >
-            🐤
+            {/* The mark: four arcs (the pillars) closing into a day, around
+                the one thing at its center. Follows the chosen accent. */}
+            <svg viewBox="0 0 40 40" className="size-9" fill="none">
+              <g stroke="currentColor" strokeWidth="5" strokeLinecap="round">
+                <path d="M33.37 21.88 A13.5 13.5 0 0 1 21.88 33.37" />
+                <path d="M18.12 33.37 A13.5 13.5 0 0 1 6.63 21.88" />
+                <path d="M6.63 18.12 A13.5 13.5 0 0 1 18.12 6.63" />
+                <path d="M21.88 6.63 A13.5 13.5 0 0 1 33.37 18.12" />
+              </g>
+              <circle cx="20" cy="20" r="4" fill="currentColor" />
+            </svg>
           </motion.span>
           <div>
             <h1 className="font-display text-2xl font-semibold tracking-tight">Kaka</h1>
@@ -1055,8 +1056,6 @@ function HomePage() {
             {darkMode ? <Sun className="size-4" /> : <Moon className="size-4" />}
           </motion.button>
           <SettingsPopover
-            showHistory={showHistory}
-            onToggleHistory={setShowHistory}
             username={username === DEFAULT_USERNAME ? "" : username}
             onUsernameChange={(v) => setUsername(v.trim() ? v : DEFAULT_USERNAME)}
             onSettingsSaved={() => {
@@ -1582,7 +1581,6 @@ function HomePage() {
       </section>
       )}
 
-      {!isFirstRun && showHistory && <HistorySection history={history} username={username} />}
 
       <footer className="border-t border-border pt-6 text-xs text-muted-foreground">
         <AnimatePresence mode="wait">
@@ -1773,14 +1771,10 @@ const ACCENT_CHOICES = [
 
 function SettingsPopover({
   onSettingsSaved,
-  showHistory,
-  onToggleHistory,
   username,
   onUsernameChange,
 }: {
   onSettingsSaved: () => void;
-  showHistory: boolean;
-  onToggleHistory: (v: boolean) => void;
   username: string;
   onUsernameChange: (v: string) => void;
 }) {
@@ -1800,41 +1794,24 @@ function SettingsPopover({
   }
   const [open, setOpen] = useState(false);
   const [icsUrl, setIcsUrl] = useState("");
-  const [floor, setFloor] = useState("");
   const [loaded, setLoaded] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const fetchSettings = useServerFn(getSettings);
   const putSettings = useServerFn(saveSettings);
-  const fetchFloor = useServerFn(getFloor);
-  const putFloor = useServerFn(saveFloor);
   const saveSub = useServerFn(savePushSub);
   const testPush = useServerFn(sendTestPush);
 
   useEffect(() => {
     if (!open || loaded) return;
-    Promise.all([fetchSettings(), fetchFloor()])
-      .then(([s, f]) => {
+    fetchSettings()
+      .then((s) => {
         setIcsUrl(s.icsUrl ?? "");
-        setFloor(f ?? "");
         setLoaded(true);
       })
       .catch(() => setLoaded(true));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, loaded]);
-
-  async function saveFloorText() {
-    setBusy(true);
-    setStatus(null);
-    try {
-      await putFloor({ data: { floor } });
-      setStatus("Floor saved.");
-    } catch (e) {
-      setStatus(e instanceof Error ? e.message : "Couldn't save.");
-    } finally {
-      setBusy(false);
-    }
-  }
 
   async function enableReminders() {
     setBusy(true);
@@ -1916,29 +1893,6 @@ function SettingsPopover({
                 Save
               </button>
             </div>
-            <div className="mt-4">
-              <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold">
-                <Flame className="size-3.5" /> Fitness floor
-              </p>
-              <p className="mb-2 text-[11px] leading-snug text-muted-foreground">
-                Your minimum acceptable week — the AI and weekly review judge against this.
-                You can also change it by just telling Kaka ("update my floor: …").
-              </p>
-              <textarea
-                value={floor}
-                onChange={(e) => setFloor(e.target.value)}
-                rows={5}
-                placeholder="e.g. Terrace 15 daily; 5 of 7 days keeps the week…"
-                className="w-full resize-y rounded-md border border-border bg-surface px-2 py-1.5 text-[11px] leading-snug outline-none focus:border-accent"
-              />
-              <button
-                onClick={saveFloorText}
-                disabled={busy}
-                className="mt-1 rounded-full border border-border px-3 py-1.5 text-xs text-foreground hover:bg-surface-2 disabled:opacity-40"
-              >
-                Save
-              </button>
-            </div>
             <div className="mt-4 border-t border-border pt-3">
               <p className="mb-1.5 text-xs font-medium text-foreground">Your name</p>
               <input
@@ -1969,143 +1923,43 @@ function SettingsPopover({
               </p>
             </div>
             <div className="mt-4 border-t border-border pt-3">
-              <label className="flex cursor-pointer items-center justify-between gap-3">
-                <span className="text-xs font-medium text-foreground">Show history on main screen</span>
-                <input
-                  type="checkbox"
-                  checked={showHistory}
-                  onChange={(e) => onToggleHistory(e.target.checked)}
-                  className="size-4 accent-accent"
-                />
-              </label>
-              <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
-                Every capture, completion and check-in, with Markdown/JSON export.
+              <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold">
+                <BrainCircuit className="size-3.5" /> Second brain
               </p>
+              <p className="mb-2 text-[11px] leading-snug text-muted-foreground">
+                Kaka can write your day into Obsidian, Notion, or any notes app —
+                and read your goals back so its answers know you. Your Kaka's
+                endpoints, keyed by your site password:
+              </p>
+              <div className="rounded-md border border-border bg-surface px-2 py-1.5 font-mono text-[10px] leading-relaxed text-muted-foreground">
+                GET /api/digest?key=…&date=YYYY-MM-DD<br />
+                POST /api/context?key=…<br />
+                GET /api/review?key=…
+              </div>
+              <a
+                href="https://github.com/manavjoshii/kaka#automation-bridge"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-1.5 inline-block text-[11px] font-medium text-accent hover:underline"
+              >
+                Wiring guide →
+              </a>
+            </div>
+            <div className="mt-4 border-t border-border pt-3">
+              <Link
+                to="/history"
+                onClick={() => setOpen(false)}
+                className="flex items-center justify-between gap-3 text-xs font-medium text-foreground hover:text-accent"
+              >
+                <span>History — every capture, completion and check-in</span>
+                <ArrowRight className="size-3.5 shrink-0" />
+              </Link>
             </div>
             {status && <p className="mt-3 text-[11px] leading-snug text-accent">{status}</p>}
           </div>
         </>
       )}
     </div>
-  );
-}
-
-function HistorySection({
-  history,
-  username,
-}: {
-  history: HistoryEvent[];
-  username: string;
-}) {
-  const [filter, setFilter] = useState<(typeof KIND_CATEGORIES)[number]["id"]>("all");
-  const cat = KIND_CATEGORIES.find((c) => c.id === filter)!;
-  const filtered = cat.kinds
-    ? history.filter((e) => (cat.kinds as HistoryKind[]).includes(e.kind))
-    : history;
-  const visible = filtered.slice(0, 50);
-
-  return (
-    <section className="mb-10">
-      <div className="mb-4 flex flex-wrap items-baseline justify-between gap-3">
-        <div className="flex items-baseline gap-2">
-          <HistoryIcon className="size-5 self-center text-muted-foreground" />
-          <h2 className="font-display text-3xl font-semibold tracking-tight">History</h2>
-          <p className="text-xs text-muted-foreground tabular-nums">
-            {history.length} events
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {KIND_CATEGORIES.map((c) => (
-            <button
-              key={c.id}
-              onClick={() => setFilter(c.id)}
-              className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-                filter === c.id
-                  ? "border-accent bg-accent text-accent-foreground"
-                  : "border-border bg-card text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {c.label}
-            </button>
-          ))}
-          <button
-            onClick={() => downloadHistory(history, username)}
-            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground hover:text-foreground"
-            title="Download as Markdown (LLM-friendly)"
-          >
-            <Download className="size-3" />
-            .md
-          </button>
-          <button
-            onClick={() => downloadHistoryJSON(history, username)}
-            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground hover:text-foreground"
-            title="Download as JSON"
-          >
-            <Download className="size-3" />
-            .json
-          </button>
-          {history.length > 0 && (
-            <button
-              onClick={() => {
-                if (confirm("Clear all history? This cannot be undone.")) clearHistory();
-              }}
-              className="inline-flex items-center gap-1 rounded-full border border-transparent px-2 py-1 text-[11px] text-muted-foreground hover:text-destructive"
-            >
-              Clear
-            </button>
-          )}
-        </div>
-      </div>
-      {visible.length === 0 ? (
-        <div className="rounded-3xl border border-dashed border-border bg-card p-10 text-center">
-          <p className="text-sm text-muted-foreground">
-            Nothing yet. Every capture, completion and check-in lands here.
-          </p>
-        </div>
-      ) : (
-        <ul className="divide-y divide-border overflow-hidden rounded-3xl border border-border bg-card">
-          {visible.map((ev) => (
-            <HistoryRow key={ev.id} ev={ev} />
-          ))}
-        </ul>
-      )}
-      {filtered.length > visible.length && (
-        <p className="mt-3 text-center text-xs text-muted-foreground">
-          Showing latest {visible.length} of {filtered.length}. Download for the full log.
-        </p>
-      )}
-    </section>
-  );
-}
-
-function HistoryRow({ ev }: { ev: HistoryEvent }) {
-  const d = new Date(ev.ts);
-  const time = d.toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-  const tone =
-    ev.kind.includes("completed") || ev.kind === "habit_checkin"
-      ? "bg-neon/20 text-foreground"
-      : ev.kind.includes("deleted")
-        ? "bg-destructive/10 text-destructive"
-        : ev.kind === "captured"
-          ? "bg-accent/15 text-accent"
-          : ev.kind.includes("habit")
-            ? "bg-amber/20 text-foreground"
-            : "bg-sky/15 text-sky";
-  return (
-    <li className="flex items-center gap-3 px-4 py-2.5">
-      <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${tone}`}>
-        {kindLabel(ev.kind)}
-      </span>
-      <span className="min-w-0 flex-1 truncate text-sm">{ev.title}</span>
-      <span className="shrink-0 font-mono text-[10px] tabular-nums text-muted-foreground">
-        {time}
-      </span>
-    </li>
   );
 }
 
